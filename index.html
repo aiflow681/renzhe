@@ -141,6 +141,7 @@
             padding: 20px;
             padding-bottom: env(safe-area-inset-bottom, 20px);
             overflow-y: auto;
+            pointer-events: auto;
         }
         
         /* Short Screen Adaptation (Landscape Mobile) */
@@ -248,6 +249,7 @@
             box-shadow: 0 5px 15px rgba(233, 30, 99, 0.4);
             font-weight: bold;
             text-transform: uppercase;
+            pointer-events: auto;
         }
         
         .btn:active {
@@ -319,7 +321,7 @@
 </div>
 
 <script>
-    // Asset Management
+    // 资源管理
     const assets = {
         bg: new Image(),
         ninja: new Image(),
@@ -334,14 +336,14 @@
     assets.shuriken.src = './images/shuriken.svg';
     assets.gib.src = './images/gib.svg';
 
-    // Constants
+    // 游戏配置
     const CONFIG = {
         gravity: 0.1,
-        shurikenSpeed: 30, // Faster projectiles for easier accuracy
-        enemySpeedBase: 1.5, // Even slower base speed
-        enemySpeedMax: 6,  // Lower max cap
-        spawnRateBase: 40, // Faster spawn rate (More often)
-        dodgeDuration: 30, // frames
+        shurikenSpeed: 30,
+        enemySpeedBase: 1.5,
+        enemySpeedMax: 6,
+        spawnRateBase: 40,
+        dodgeDuration: 30,
         colors: {
             bg: '#1d1d1d',
             ninja: '#e91e63',
@@ -350,29 +352,29 @@
         }
     };
 
-    // State
+    // 游戏状态
     const state = {
         playing: false,
         width: 0,
         height: 0,
         score: 0,
-        bgY: 0, // Background scroll
+        bgY: 0,
         bestScore: parseInt(localStorage.getItem('ninja_best_score') || '0'),
         lives: 3,
         frameCount: 0,
         
         ninja: {
             x: 0, y: 0,
-            width: 32, height: 32, // Smaller Ninja
-            dodging: 0, // timer
+            width: 32, height: 32,
+            dodging: 0,
         },
         
-        enemies: [], // {x, y, vy, ...}
-        projectiles: [], // {x, y, vx, vy, ...}
+        enemies: [],
+        projectiles: [],
         particles: []
     };
 
-    // Elements
+    // DOM元素
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const livesPanel = document.getElementById('lives-panel');
@@ -383,30 +385,22 @@
     const finalScoreEl = document.getElementById('final-score');
     const finalBestEl = document.getElementById('final-best');
 
-    // Init
+    // 初始化和调整画布大小
     function resize() {
         state.width = document.documentElement.clientWidth;
         state.height = document.documentElement.clientHeight;
         canvas.width = state.width;
         canvas.height = state.height;
         
-        // Calculate Defense Line based on screen height
         let defenseY;
         
         if (state.height < 500) {
-           // Landscape / Short screen:
-           // Controls are on sides, so we can use more bottom space.
-           // Buttons occupy ~100px height at bottom sides.
-           // Ninja is in center, so he can go lower.
            defenseY = state.height - 80; 
         } else {
-           // Portrait: Controls are a bottom bar (160px) + padding
            defenseY = state.height - 200;
         }
 
         state.defenseLine = defenseY;
-        
-        // Update Ninja Y
         state.ninja.y = state.defenseLine;
 
         if (!state.playing) {
@@ -414,11 +408,12 @@
             state.ninja.targetX = state.ninja.x;
         }
         
-        bestScoreEl.innerText = `${state.bestScore}`; // Removed 'BEST' text
+        bestScoreEl.innerText = `${state.bestScore}`;
     }
 
+    // 开始游戏
     function startGame() {
-        resize(); // Ensure defense line is set correctly
+        resize();
         state.playing = true;
         state.score = 0;
         state.lives = 3;
@@ -440,27 +435,27 @@
         gameLoop();
     }
 
+    // 生成敌人
     function spawnEnemy() {
-        // 4 Lanes Logic to mimic Castle Defense style
         const laneCount = 4;
         const laneIndex = Math.floor(Math.random() * laneCount);
         const laneWidth = state.width / laneCount;
         const x = (laneIndex * laneWidth) + (laneWidth / 2);
         
-        // Difficulty scaling
         const difficulty = Math.min(20, Math.floor(state.score / 50)); 
-        const speed = CONFIG.enemySpeedBase + (difficulty * 0.3); // Slower interval
+        const speed = CONFIG.enemySpeedBase + (difficulty * 0.3);
         
         state.enemies.push({
             x: x,
             y: -60,
-            width: 36, // Smaller Enemy
-            height: 36, // Smaller Enemy
+            width: 36,
+            height: 36,
             vy: speed,
-            hp: 1 + Math.floor(difficulty / 5) // HP increases gradually
+            hp: 1 + Math.floor(difficulty / 5)
         });
     }
 
+    // 创建爆炸效果
     function createExplosion(x, y, color) {
         for (let i = 0; i < 8; i++) {
             const angle = Math.random() * Math.PI * 2;
@@ -476,10 +471,11 @@
         }
     }
 
+    // 攻击
     function attack() {
         if (!state.playing) return;
         
-        // Find nearest enemy
+        // 寻找最近的敌人
         let nearest = null;
         let minDist = Infinity;
         
@@ -502,9 +498,6 @@
         let vy = -CONFIG.shurikenSpeed;
 
         if (nearest) {
-            // Homing Missile Setup
-            // We set the initial velocity, but we also save the target.
-            // In update(), we will steer the projectile towards this target.
             const dx = nearest.x - startX;
             const dy = nearest.y - startY;
             const angle = Math.atan2(dy, dx);
@@ -520,72 +513,63 @@
             width: 24, 
             height: 24,
             rotation: 0,
-            target: nearest // LOCK-ON
+            target: nearest
         });
     }
 
+    // 闪避
     function dodge() {
         if (!state.playing) return;
-        if (state.ninja.dodging > 0) return; // Cooldown?
+        if (state.ninja.dodging > 0) return;
         
         state.ninja.dodging = CONFIG.dodgeDuration;
         
-        // Visual effect / Dash
-        // Move randomly left or right to simulate dodge
         const dashDist = 120;
         const dir = Math.random() > 0.5 ? 1 : -1;
         
         let target = state.ninja.x + dir * dashDist;
-        // Keep in bounds
-        if (target < 40) target = state.ninja.x + dashDist; // force right if hitting left wall
-        if (target > state.width - 40) target = state.ninja.x - dashDist; // force left if hitting right wall
+        if (target < 40) target = state.ninja.x + dashDist;
+        if (target > state.width - 40) target = state.ninja.x - dashDist;
         
-        state.ninja.targetX = target; // Smooth move handled in update
+        state.ninja.targetX = target;
     }
 
+    // 更新游戏状态
     function update() {
         state.frameCount++;
         
-        // Smooth Ninja Move (Dodge behavior)
+        // 忍者移动
         if (Math.abs(state.ninja.targetX - state.ninja.x) > 1) {
             state.ninja.x += (state.ninja.targetX - state.ninja.x) * 0.2;
         } else {
-             // Return to center slowly? Or stay? Stay is chaos.
-             // Usually these games have fixed lanes or positions.
-             // Let's make him return to center if not dodging
              if (state.ninja.dodging === 0) {
                  state.ninja.targetX = state.width / 2;
              }
         }
 
-        // Ninja Dodge timer
         if (state.ninja.dodging > 0) state.ninja.dodging--;
 
-        // Spawn
+        // 生成敌人
         const spawnParams = Math.max(20, CONFIG.spawnRateBase - Math.floor(state.score / 50));
         if (state.frameCount % spawnParams === 0) {
             spawnEnemy();
         }
 
-        // Update Projectiles
+        // 更新飞镖
         for (let i = state.projectiles.length - 1; i >= 0; i--) {
             const p = state.projectiles[i];
             
-            // HOMING LOGIC (Reduced Accuracy)
+            // 追踪逻辑
             if (p.target && state.enemies.includes(p.target)) {
                  const dx = p.target.x - p.x;
                  const dy = p.target.y - p.y;
                  const targetAngle = Math.atan2(dy, dx);
                  const currentAngle = Math.atan2(p.vy, p.vx);
                  
-                 // Steering: Blend angles with a limit
                  let diff = targetAngle - currentAngle;
-                 // Normalize angle diff to -PI to PI
                  while (diff > Math.PI) diff -= Math.PI * 2;
                  while (diff < -Math.PI) diff += Math.PI * 2;
                  
-                 // Turn speed limit (The "Accuracy" Factor)
-                 // Lower = Less accurate/Slower turn
                  const turnSpeed = 0.05; 
                  const turn = Math.max(-turnSpeed, Math.min(turnSpeed, diff));
                  
@@ -598,19 +582,17 @@
             p.y += p.vy;
             p.rotation += 0.5;
 
-            // Bounds
             if (p.x < 0 || p.x > state.width || p.y < 0 || p.y > state.height) {
                 state.projectiles.splice(i, 1);
                 continue;
             }
 
-            // Hit Enemy
+            // 检测命中敌人
             for (let j = state.enemies.length - 1; j >= 0; j--) {
                 const e = state.enemies[j];
                 const dx = p.x - e.x;
                 const dy = p.y - e.y;
-                if (Math.hypot(dx, dy) < 40) { // Large benevolent hitbox
-                    // Hit!
+                if (Math.hypot(dx, dy) < 40) {
                     createExplosion(e.x, e.y, CONFIG.colors.enemy);
                     state.enemies.splice(j, 1);
                     state.projectiles.splice(i, 1);
@@ -621,19 +603,16 @@
             }
         }
 
-        // Update Enemies
+        // 更新敌人
         for (let i = state.enemies.length - 1; i >= 0; i--) {
             const e = state.enemies[i];
             e.y += e.vy;
 
-            // Check Player Collision
             const dist = Math.hypot(e.x - state.ninja.x, e.y - state.ninja.y);
-            if (dist < 32) { // Adjusted player impact radius
-                // If dodging, safe!
+            if (dist < 32) {
                 if (state.ninja.dodging > 0) {
-                    // Safe pass
+                    // 闪避成功
                 } else {
-                    // Hit!
                     createExplosion(e.x, e.y, '#ff0000');
                     state.enemies.splice(i, 1);
                     loseLife();
@@ -641,17 +620,13 @@
                 }
             }
 
-            // Check Bottom
-            // If enemy reaches defense line (control area)
-            // Allow them to fall a bit lower, near the bottom of screen, to give player more time
-            // since controls are now faint/overlay.
             if (e.y > state.height - 50) {
                 state.enemies.splice(i, 1);
                 loseLife();
             }
         }
 
-        // Particles
+        // 更新粒子
         for (let i = state.particles.length - 1; i >= 0; i--) {
             const p = state.particles[i];
             p.x += p.vx;
@@ -661,10 +636,10 @@
         }
     }
 
+    // 失去生命
     function loseLife() {
         state.lives--;
         updateUI();
-        // Shake effect
         const intense = 10;
         canvas.style.transform = `translate(${Math.random()*intense-intense/2}px, ${Math.random()*intense-intense/2}px)`;
         setTimeout(() => canvas.style.transform = 'none', 100);
@@ -674,6 +649,7 @@
         }
     }
 
+    // 更新UI
     function updateUI() {
         scoreEl.innerText = state.score;
         livesPanel.innerHTML = '';
@@ -685,6 +661,7 @@
         }
     }
 
+    // 游戏结束
     function gameOver() {
         state.playing = false;
         if (state.score > state.bestScore) {
@@ -692,10 +669,11 @@
             localStorage.setItem('ninja_best_score', state.bestScore);
         }
         finalScoreEl.innerText = state.score;
-        finalBestEl.innerText = '最高' + state.bestScore; // Removed English
+        finalBestEl.innerText = '最高' + state.bestScore;
         gameOverScreen.style.display = 'flex';
     }
 
+    // 绘制游戏画面
     function draw() {
         ctx.fillStyle = CONFIG.colors.bg;
         ctx.fillRect(0, 0, state.width, state.height);
@@ -706,8 +684,8 @@
               ctx.fillRect(0,0,state.width, state.height);
         }
 
-        // Draw Lanes
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)'; // More faint
+        // 绘制泳道线
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         for (let i = 1; i < 4; i++) {
@@ -717,31 +695,30 @@
         }
         ctx.stroke();
 
-        // Projectiles (Draw first)
+        // 绘制飞镖
         state.projectiles.forEach(p => {
              ctx.save();
              ctx.translate(p.x, p.y);
              ctx.rotate(p.rotation);
              if (assets.shuriken.complete) {
-                 const size = 24; // Smaller shuriken
+                 const size = 24;
                  ctx.drawImage(assets.shuriken, -size/2, -size/2, size, size);
              } else {
                  ctx.fillStyle = CONFIG.colors.shuriken;
                  ctx.beginPath();
-                 ctx.arc(0, 0, 8, 0, Math.PI*2); // Smaller simple circle
+                 ctx.arc(0, 0, 8, 0, Math.PI*2);
                  ctx.fill();
              }
              ctx.restore();
         });
 
-        // Ninja
+        // 绘制忍者
         if (state.ninja.dodging > 0) {
-            ctx.globalAlpha = 0.5; // Ghost mode
+            ctx.globalAlpha = 0.5;
         }
         
         const n = state.ninja;
         if (assets.ninja.complete && assets.ninja.naturalWidth > 0) {
-            // Updated to use SVG full image
             ctx.drawImage(
                 assets.ninja, 
                 n.x - n.width/2, n.y - n.height/2, n.width, n.height
@@ -754,7 +731,7 @@
         }
         ctx.globalAlpha = 1.0;
 
-        // Enemies
+        // 绘制敌人
         state.enemies.forEach(e => {
             if (assets.samurai.complete && assets.samurai.naturalWidth > 0) {
                  ctx.drawImage(
@@ -767,14 +744,12 @@
             }
         });
         
-        // Particles
+        // 绘制粒子效果
         state.particles.forEach(p => {
             if (p.image && p.image.complete) {
                 ctx.save();
                 ctx.translate(p.x, p.y);
                 const size = 20 * (p.life / 30);
-                
-                // Crop logic for gibs if needed, or just draw
                 ctx.drawImage(p.image, 0, 0, p.image.naturalWidth, p.image.naturalHeight, -size/2, -size/2, size, size);
                 ctx.restore();
             } else {
@@ -791,6 +766,7 @@
     let lastTime = 0;
     const fpsInterval = 1000 / 60; 
 
+    // 游戏主循环
     function gameLoop(timestamp) {
         if (!state.playing) return;
         
@@ -805,16 +781,15 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // Input Handling
+    // 输入处理
     const btnAttack = document.getElementById('btn-attack');
     const btnDodge = document.getElementById('btn-dodge');
     const btnStart = document.getElementById('start-btn');
     const btnRestart = document.getElementById('restart-btn');
 
-    // Touch/Click
     const handleAttack = (e) => { 
         e.preventDefault(); 
-        if(e.type === 'mousedown' && 'ontouchstart' in window) return; // Prevent double firing
+        if(e.type === 'mousedown' && 'ontouchstart' in window) return;
         attack(); 
     };
     const handleDodge = (e) => { 
@@ -829,7 +804,6 @@
     btnDodge.addEventListener('touchstart', handleDodge, {passive: false});
     btnDodge.addEventListener('mousedown', handleDodge);
 
-    // Keyboard
     document.addEventListener('keydown', (e) => {
         if (!state.playing) return;
         if (e.code === 'ArrowRight' || e.code === 'KeyD') attack();
@@ -841,10 +815,9 @@
 
     window.addEventListener('resize', resize);
     
-    // Initial draw
     resize();
     ctx.fillStyle = CONFIG.colors.bg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height); // Black screen before start
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 </script>
 </body>
