@@ -24,7 +24,7 @@
             touch-action: none;
             height: 100%;
             width: 100%;
-            position: fixed; /* Prevents scroll bounce on mobile */
+            position: fixed; /* 防止移动端滚动回弹 */
         }
 
         #canvas {
@@ -81,12 +81,12 @@
             margin-top: 5px;
         }
 
-        /* Controls */
+        /* 控制区 */
         #controls {
             width: 100%;
-            height: 160px; /* Fixed height for controls */
+            height: 160px; /* 固定控制区高度 */
             display: flex;
-            pointer-events: auto; /* Enable clicks */
+            pointer-events: auto; /* 启用点击交互 */
             position: absolute;
             bottom: 0;
             left: 0;
@@ -104,7 +104,7 @@
         }
         
         .control-zone:active {
-            background: rgba(255,255,255,0.05); /* Visual feedback */
+            background: rgba(255,255,255,0.05); /* 视觉反馈 */
         }
 
         .control-label {
@@ -125,7 +125,7 @@
             top: 20%;
         }
 
-        /* Screens */
+        /* 屏幕界面 */
         #start-screen, #game-over-screen {
             position: fixed;
             top: 0;
@@ -144,7 +144,7 @@
             pointer-events: auto;
         }
         
-        /* Short Screen Adaptation (Landscape Mobile) */
+        /* 短屏幕适配 (横屏移动端) */
         @media (max-height: 500px) {
             #start-screen, #game-over-screen {
                 flex-direction: row;
@@ -186,9 +186,9 @@
                 margin: 0;
             }
 
-            /* Make controls smaller on short screens */
+            /* 在短屏幕上缩小控制区 */
             #controls {
-                height: 0; /* Overlay style */
+                height: 0; /* 覆盖层样式 */
                 overflow: visible;
                 background: transparent;
                 padding: 0;
@@ -199,23 +199,23 @@
                 bottom: 20px;
                 width: 120px;
                 height: 80px;
-                background: rgba(255, 255, 255, 0.05); /* Faint background */
+                background: rgba(255, 255, 255, 0.05); /* 微弱背景 */
                 border: none;
                 border-radius: 20px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                flex: none; /* Disable flex grow */
+                flex: none; /* 禁用自动伸展 */
             }
 
             #btn-dodge {
                 left: 20px;
-                background: rgba(33, 150, 243, 0.1); /* Very faint Blue tint */
+                background: rgba(33, 150, 243, 0.1); /* 微弱蓝色 */
             }
             
             #btn-attack {
                 right: 20px;
-                background: rgba(233, 30, 99, 0.1); /* Very faint Pink tint */
+                background: rgba(233, 30, 99, 0.1); /* 微弱粉色 */
             }
 
             .control-divider {
@@ -289,11 +289,11 @@
     
     <div id="controls">
         <div class="control-zone" id="btn-dodge">
-            <div class="control-label"></div> <!-- Text Removed -->
+            <div class="control-label"></div> <!-- 文本已移除 -->
             <div class="control-divider"></div>
         </div>
         <div class="control-zone" id="btn-attack">
-            <div class="control-label"></div> <!-- Text Removed -->
+            <div class="control-label"></div> <!-- 文本已移除 -->
         </div>
     </div>
 </div>
